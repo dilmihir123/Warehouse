@@ -4,6 +4,10 @@
        <h1> {{ prediction }}</h1> 
        <br>
        <br>
-       
+       <label id="value_lable">
+        {% for suggestion in suggestions %}
+            {{ suggestion }}<br>
+        {% endfor %}
+    </label>
    </body> 
 </html> 

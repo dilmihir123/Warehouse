@@ -16,22 +16,27 @@ ETS=[2539, 1207, 1230, 2322, 2290, 1727, 1109, 2126, 1971, 1558, 2581, 1962, 144
 
 
 
+
 def ValuePredictor(to_predict_list): 
     to_predict = np.array(to_predict_list).reshape(1, 2) 
-    Mid=to_predict[0][1]
-    week=to_predict[1][1]
+    Mid=to_predict[0][0]
+    week=to_predict[0][1]
 
 
     present=0
+    Raw=[]
 
     try:
-        b=totalMeals.index(7)
+        for i in totalMeals:
+          if(i==Mid):
+            xl=0
     except ValueError:
-        result='Enter a valid ID or click to add a new meal'
+        Pred='Enter a valid ID from the below list or click to add a new meal'
+        Raw=pd.concat([ETS,STL]) 
     else:
         for i in totalMeals:
             for s in STL:
-                if(i==s):
+                if(i==Mid):
                     from stldecompose import decompose, forecast
                     FName="STL"+str(i)+".xml"
                     model = joblib.load(FName)
@@ -39,18 +44,33 @@ def ValuePredictor(to_predict_list):
                     Pred=[]
                     for j in fore.values:
                         Pred.append(j[0])
-                    result = Pred
+                    RawMat=Quantity.loc[i]
+                    for p in range(0,len(Pred)):
+                        qt='Week%s' % p
+                        qt=[]
+                        for q in range(0,len(RawMat)):
+                          rw=int(round(Pred[p]*RawMat[q]))
+                          qt.append(rw)
+                        Raw.append(qt)
+                    break
 
 
             for e in ETS:
-                if(i==e):
+                if(e==Mid):
                     FName="ETS"+str(i)+".xml"
                     model = joblib.load(FName)
-                    fore=model.forecast(7) 
-                    result=fore
-    
- 
-    return result 
+                    Pred=[]
+                    Pred=model.forecast(week) 
+                    RawMat=Quantity.loc[i]
+                    for p in range(0,len(Pred)):
+                        qt='Week%s' % p
+                        qt=[]
+                        for q in range(0,len(RawMat)):
+                          rw=int(round(Pred[p]*RawMat[q]))
+                          qt.append(rw)
+                        Raw.append(qt)
+                    break 
+    return Pred,Raw
   
 @app.route('/result', methods = ['POST']) 
 def result(): 
@@ -58,6 +78,5 @@ def result():
         to_predict_list = request.form.to_dict() 
         to_predict_list = list(to_predict_list.values()) 
         to_predict_list = list(map(int, to_predict_list)) 
-        result = ValuePredictor(to_predict_list)         
-        prediction =result            
-        return render_template("result.html", prediction = prediction)
+        Predicted,PredRaw = ValuePredictor(to_predict_list)         
+    return render_template("result.html", prediction = Predicted, suggestions=PredRaw)

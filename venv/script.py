@@ -4,6 +4,10 @@ from sklearn.externals import joblib
 from flask import Flask, request, jsonify, render_template
 import numpy as np
 
+from flask import Flask
+
+app = Flask(__name__)
+
 
 # prediction function
 meal_info = pd.read_csv('meal_info.csv')
@@ -75,6 +79,10 @@ def ValuePredictor(to_predict_list):
         
  
     return Prediction,RawMaterials
+
+@app.route('/')
+def index():
+    return render_template("index.html")
   
 @app.route('/result', methods = ['POST']) 
 def result(): 

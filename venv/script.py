@@ -66,7 +66,7 @@ def ValuePredictor(to_predict_list):
                   qt.append(rw)
                 Raw.append(qt)
                 break
-    except (RuntimeError,TypeError, NameError, ValueError):
+    except (RuntimeError,TypeError, NameError, ValueError,KeyError):
         Prediction="Eneter a"
         RawMaterials="raw"
     else:

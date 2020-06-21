@@ -20,57 +20,61 @@ ETS=[2539, 1207, 1230, 2322, 2290, 1727, 1109, 2126, 1971, 1558, 2581, 1962, 144
 def ValuePredictor(to_predict_list): 
     to_predict = np.array(to_predict_list).reshape(1, 2) 
     Mid=to_predict[0][0]
+    #print(Mid)
     week=to_predict[0][1]
+    #print(week)
 
 
     present=0
     Raw=[]
 
     try:
-        for i in totalMeals:
+      for i in totalMeals:
+        for s in STL:
           if(i==Mid):
-            xl=0
-    except ValueError:
-        Pred='Enter a valid ID from the below list or click to add a new meal'
-        Raw=pd.concat([ETS,STL]) 
+            from stldecompose import decompose, forecast
+            FName="STL"+str(i)+".xml"
+            #print(FName)
+            model = joblib.load(FName)
+            #print(model)
+            fore=forecast(model, steps=week, fc_func=naive, seasonal=True) 
+            Pred=[]
+            for j in fore.values:
+              Pred.append(j[0])
+            RawMat=Quantity.loc[Mid]
+                #print(RawMat)
+            for p in range(0,len(Pred)):
+              qt='Week%s' % p
+              qt=[]
+              for q in range(0,len(RawMat)):
+                rw=int(round(Pred[p]*RawMat[q]))
+                qt.append(rw)
+              Raw.append(qt)
+            break
+        for e in ETS:
+          if(e==Mid):
+              FName="ETS"+str(i)+".xml"
+              model = joblib.load(FName)
+              Pred=[]
+              Pred=model.forecast(week) 
+              RawMat=Quantity.loc[Mid]
+              for p in range(0,len(Pred)):
+                qt='Week%s' % p
+                qt=[]
+                for q in range(0,len(RawMat)):
+                  rw=int(round(Pred[p]*RawMat[q]))
+                  qt.append(rw)
+                Raw.append(qt)
+                break
+    except (RuntimeError,TypeError, NameError, ValueError):
+        Prediction="Eneter a"
+        RawMaterials="raw"
     else:
-        for i in totalMeals:
-            for s in STL:
-                if(i==Mid):
-                    from stldecompose import decompose, forecast
-                    FName="STL"+str(i)+".xml"
-                    model = joblib.load(FName)
-                    fore=forecast(model, steps=week, fc_func=naive, seasonal=True) 
-                    Pred=[]
-                    for j in fore.values:
-                        Pred.append(j[0])
-                    RawMat=Quantity.loc[i]
-                    for p in range(0,len(Pred)):
-                        qt='Week%s' % p
-                        qt=[]
-                        for q in range(0,len(RawMat)):
-                          rw=int(round(Pred[p]*RawMat[q]))
-                          qt.append(rw)
-                        Raw.append(qt)
-                    break
-
-
-            for e in ETS:
-                if(e==Mid):
-                    FName="ETS"+str(i)+".xml"
-                    model = joblib.load(FName)
-                    Pred=[]
-                    Pred=model.forecast(week) 
-                    RawMat=Quantity.loc[i]
-                    for p in range(0,len(Pred)):
-                        qt='Week%s' % p
-                        qt=[]
-                        for q in range(0,len(RawMat)):
-                          rw=int(round(Pred[p]*RawMat[q]))
-                          qt.append(rw)
-                        Raw.append(qt)
-                    break 
-    return Pred,Raw
+      Prediction=Pred
+      RawMaterials=Raw
+        
+ 
+    return Prediction,RawMaterials
   
 @app.route('/result', methods = ['POST']) 
 def result(): 
